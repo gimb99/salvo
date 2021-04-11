@@ -65,11 +65,11 @@ public class Salvo {
         this.turn = turn;
     }
         //salvoLocations
-    public List<String> getLocations() {
+    public List<String> getSalvoLocations() {
         return locations;
     }
 
-    public void setLocations(List<String> locations) {
+    public void setSalvoLocations(List<String> locations) {
         this.locations = locations;
     }
 
@@ -81,4 +81,7 @@ public class Salvo {
         dto.put("locations", this.locations);
         return dto;
     }
+
+    //agregar turnos
+
 }

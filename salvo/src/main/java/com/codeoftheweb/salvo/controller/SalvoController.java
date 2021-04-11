@@ -210,14 +210,25 @@ public class SalvoController {
         }else if (gamePlayerSend.get().getPlayer().getId()!= currentPlayer.getId()){
             response = new ResponseEntity<>(makeMap("error","El jugador no está autorizado"),HttpStatus.UNAUTHORIZED);
         }else {
-            if (!gamePlayerSend.get().hasSalvo(salvos)){
-                gamePlayerSend.get().addSalvo(salvos);
-                gamePlayerRepository.save(gamePlayerSend.get());
-                response = new ResponseEntity<>(makeMap("OK","Completado"),HttpStatus.CREATED);
-            }else{
-                response = new ResponseEntity<>(makeMap("error","Hay un salvo en ese turno"),HttpStatus.FORBIDDEN);
+            //encuentro gameplayer de enemigo
+            Optional<GamePlayer> gamePlayerEnemy = gamePlayerSend.get().getGame().getGamePlayers()
+                                .stream().filter(gp -> gp.getId() != gamePlayerSend.get().getId()).findFirst();
+            if(gamePlayerEnemy.isPresent()){
+                if (gamePlayerSend.get().getSalvoes().size() <= gamePlayerEnemy.get().getSalvoes().size()){ //!gamePlayerSend.get().hasSalvo(salvos)
+
+                    salvos.setTurn(gamePlayerSend.get().getSalvoes().size() + 1);
+
+                    gamePlayerSend.get().addSalvo(salvos);
+                    gamePlayerRepository.save(gamePlayerSend.get());
+                    response = new ResponseEntity<>(makeMap("OK","Completado"),HttpStatus.CREATED);
+                }else{
+                    response = new ResponseEntity<>(makeMap("error","Hay un salvo en ese turno"),HttpStatus.FORBIDDEN);
+                }
+            } else{
+                response = new ResponseEntity<>(makeMap("error","Falta un enemigo"),HttpStatus.FORBIDDEN);
             }
-        }
+
+        }//agarrar gameplayer ajeno y filtrar todo lo demas, y comparar localizaciones
         return response;
     }
 }
