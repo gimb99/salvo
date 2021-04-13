@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 
 @Entity
 public class GamePlayer {
+
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "native")
     @GenericGenerator(name = "native", strategy = "native")
@@ -35,8 +36,8 @@ public class GamePlayer {
     private Set<Ship> ships = new HashSet<>();
 
     //26-03 agregado
-    @OneToMany(mappedBy="gamePlayers", fetch=FetchType.EAGER, cascade = CascadeType.ALL)
-    private Set<Salvo> salvoes = new HashSet<>();
+    @OneToMany(mappedBy = "gamePlayers", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    private List<Salvo> salvoes;
 
     private LocalDateTime joinDate;
 /*    private Player player;
@@ -44,12 +45,17 @@ public class GamePlayer {
 
     //Constructores//
     public GamePlayer(){
+        this.joinDate = LocalDateTime.now();
+        this.ships = new HashSet<>();
+        this.salvoes = new ArrayList<>();
     }
 
     public GamePlayer(Player player, Game game){
         this.player = player;
         this.game = game;
         this.joinDate = LocalDateTime.now();
+        this.ships = new HashSet<>();
+        this.salvoes = new ArrayList<>();
     }
 
     //Setters y getters//
@@ -101,25 +107,27 @@ public class GamePlayer {
         this.salvoes.add(salvo);
     }
 
-    public boolean hasSalvo(Salvo salvo) {
+    /*public boolean hasSalvo(Salvo salvo) {
         for (Salvo salvo1 : salvoes) {
             if (salvo1.getTurn() == salvo.getTurn()) {
                 return true;
             }
         }
         return false;
-    }
+    }*/
 
   /*  public boolean placedShips(){
         return ships.size() = game.maxShipsAllowed;
     }*/
 
     //@JsonIgnore
-    public Set<Salvo> getSalvoes() {
-        return salvoes;
-    }
+    public List<Salvo> getSalvoes() { return salvoes; }
 
-    public void setSalvoes(Salvo salvo) {
+    /*public void setSalvoes(Salvo salvo) {
+        this.salvoes = salvoes;
+    }*/
+
+    public void setSalvoes(List<Salvo> salvoes) {
         this.salvoes = salvoes;
     }
 
@@ -140,6 +148,13 @@ public class GamePlayer {
         return dto;
     }
 
+    //Encontrar enemigo
+    public GamePlayer getOpponent(){
+        return this.getGame().getGamePlayers().stream()
+                .filter(gamePlayer -> gamePlayer.getId()!= this.getId())
+                .findFirst().orElse(new GamePlayer());
+    }
+
     // == gameViewDTO OLD
 /*    public Map<String, Object> game_view() {
         Map<String, Object> dto = new LinkedHashMap<>();
@@ -152,87 +167,7 @@ public class GamePlayer {
     }*/
 
     //GAMEVIEW NUEVO
-    public Map<String, Object> game_view() {
-        Map<String, Object> dto = new LinkedHashMap<>();
-        dto.put("id", game.getId());
-        dto.put("created", game.getCreationDate());
-        dto.put("gamePlayers", game.getGamePlayers().stream().map(gamePlayer -> makeGamePlayerDTO()).collect(Collectors.toList()));
-        dto.put("ships", ships.stream().map(Ship -> Ship.makeShipDTO()).collect(Collectors.toList()));
-        dto.put("salvoes", game.getGamePlayers().stream().flatMap(a -> a.getSalvoes().stream().map(b ->b.makeSalvoDTO())).collect(Collectors.toList()));
 
-        Map<String, Object> hits = new LinkedHashMap<>();
-        hits.put("self", new ArrayList<>());
-        hits.put("opponent", new ArrayList<>());
-        dto.put("gameState", "PLACESHIPS");
-
-        dto.put("gamePlayers", this.getGame().getGamePlayers()
-                .stream()
-                .map(gamePlayer1 -> gamePlayer1.makeGamePlayerDTO())
-                .collect(Collectors.toList()));
-        dto.put("ships",  this.getShips()
-                .stream()
-                .map(ship -> ship.makeShipDTO())
-                .collect(Collectors.toList()));
-        dto.put("salvoes",  this.getGame().getGamePlayers()
-                .stream()
-                .flatMap(gamePlayer1 -> gamePlayer1.getSalvoes()
-                        .stream()
-                        .map(salvo -> salvo.makeSalvoDTO()))
-                .collect(Collectors.toList()));
-        dto.put("hits", hits);
-        return dto;
-    }
-
-/*    @RequestMapping("/game_view/{nn}")
-    public ResponseEntity<Map<String, Object>> getGameViewByGamePlayerID(@PathVariable Long nn, Authentication  authentication) {
-
-        if(isGuest(authentication)){
-            return new  ResponseEntity<>(makeMap("error","Paso algo"),HttpStatus.UNAUTHORIZED);
-        }
-
-        Player  player  = playerRepository.findByEmail(authentication.getName()).orElse(null);
-        GamePlayer gamePlayer = gamePlayerRepository.findById(nn).orElse(null);
-
-        if(player ==  null){
-            return new  ResponseEntity<>(makeMap("error","Paso algo"),HttpStatus.UNAUTHORIZED);
-        }
-
-        if(gamePlayer ==  null ){
-            return new  ResponseEntity<>(makeMap("error","Paso algo"),HttpStatus.UNAUTHORIZED);
-        }
-
-        if(gamePlayer.getPlayer().getId() !=  player.getId()){
-            return new  ResponseEntity<>(makeMap("error","Paso algo"),HttpStatus.CONFLICT);
-        }
-
-        Map<String,  Object>  dto = new LinkedHashMap<>();
-        Map<String, Object> hits = new LinkedHashMap<>();
-        hits.put("self", new ArrayList<>());
-        hits.put("opponent", new ArrayList<>());
-
-        dto.put("id", gamePlayer.getGame().getId());
-        dto.put("created",  gamePlayer.getGame().getCreated());
-        dto.put("gameState", "PLACESHIPS");
-
-        dto.put("gamePlayers", gamePlayer.getGame().getGamePlayers()
-                .stream()
-                .map(gamePlayer1 -> gamePlayer1.makeGamePlayerDTO())
-                .collect(Collectors.toList()));
-        dto.put("ships",  gamePlayer.getShips()
-                .stream()
-                .map(ship -> ship.makeShipDTO())
-                .collect(Collectors.toList()));
-        dto.put("salvoes",  gamePlayer.getGame().getGamePlayers()
-                .stream()
-                .flatMap(gamePlayer1 -> gamePlayer1.getSalvoes()
-                        .stream()
-                        .map(salvo -> salvo.makeSalvoDTO()))
-                .collect(Collectors.toList()));
-        dto.put("hits", hits);
-
-
-        return  new ResponseEntity<>(dto,HttpStatus.OK);
-    }*/
 
 
 }
