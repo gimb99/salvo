@@ -14,6 +14,8 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.codeoftheweb.salvo.GameState.TIE;
+
 @RestController
 @RequestMapping("/api")
 public class SalvoController {
@@ -79,42 +81,42 @@ public class SalvoController {
     public ResponseEntity<Map<String, Object>> getGameViewByGamePlayerID(@PathVariable Long nn, Authentication  authentication) {
 
         if(isGuest(authentication)){
-            return new  ResponseEntity<>(makeMap("error","Paso algo"), HttpStatus.UNAUTHORIZED);
+            return new  ResponseEntity<>(makeMap("error","Usuario no autorizado"), HttpStatus.UNAUTHORIZED);
         }
 
         Player player  = playerRepository.findByUserName(authentication.getName());
-        GamePlayer gamePlayer = gamePlayerRepository.findById(nn).orElse(null);
+        Optional <GamePlayer> gamePlayer = gamePlayerRepository.findById(nn);
 
         if(player ==  null){
-            return new  ResponseEntity<>(makeMap("error","Paso algo"),HttpStatus.UNAUTHORIZED);
+            return new  ResponseEntity<>(makeMap("error","No existe el jugador"),HttpStatus.UNAUTHORIZED);
         }
 
-        if(gamePlayer ==  null ){
-            return new  ResponseEntity<>(makeMap("error","Paso algo"),HttpStatus.UNAUTHORIZED);
+        if(gamePlayer ==  null){
+            return new  ResponseEntity<>(makeMap("error","Error de gameplayer"),HttpStatus.UNAUTHORIZED);
         }
 
-        if(gamePlayer.getPlayer().getId() !=  player.getId()){
-            return new  ResponseEntity<>(makeMap("error","Paso algo"),HttpStatus.CONFLICT);
+        if(gamePlayer.get().getPlayer().getId() !=  player.getId()){
+            return new  ResponseEntity<>(makeMap("error","Error de ID"),HttpStatus.CONFLICT);
         }
 
         Map<String,  Object>  dto = new LinkedHashMap<>();
         Map<String, Object> hits = new LinkedHashMap<>();
-        hits.put("self",hitsAndSinks(gamePlayer,gamePlayer.getOpponent()));
-        hits.put("opponent", hitsAndSinks(gamePlayer.getOpponent(),gamePlayer));
+        hits.put("self",hitsAndSinks(gamePlayer.get(),gamePlayer.get().getOpponent()));
+        hits.put("opponent", hitsAndSinks(gamePlayer.get().getOpponent(),gamePlayer.get()));
 
-        dto.put("id", gamePlayer.getGame().getId());
-        dto.put("created",  gamePlayer.getGame().getCreationDate());
-        dto.put("gameState", "PLACESHIPS");
+        dto.put("id", gamePlayer.get().getId());
+        dto.put("created",  gamePlayer.get().getGame().getCreationDate());
+        dto.put("gameState", gameState(gamePlayer.get()));
 
-        dto.put("gamePlayers", gamePlayer.getGame().getGamePlayers()
+        dto.put("gamePlayers", gamePlayer.get().getGame().getGamePlayers()
                 .stream()
                 .map(gamePlayer1 -> gamePlayer1.makeGamePlayerDTO())
                 .collect(Collectors.toList()));
-        dto.put("ships",  gamePlayer.getShips()
+        dto.put("ships",  gamePlayer.get().getShips()
                 .stream()
                 .map(ship -> ship.makeShipDTO())
                 .collect(Collectors.toList()));
-        dto.put("salvoes",  gamePlayer.getGame().getGamePlayers()
+        dto.put("salvoes",  gamePlayer.get().getGame().getGamePlayers()
                 .stream()
                 .flatMap(gamePlayer1 -> gamePlayer1.getSalvoes()
                         .stream()
@@ -124,7 +126,6 @@ public class SalvoController {
 
         return new ResponseEntity<>(dto,HttpStatus.OK);
     }
-
 
     //Authentication
     private boolean isGuest(Authentication authentication) {
@@ -259,13 +260,13 @@ public class SalvoController {
     }
 
     //task 9
-    @GetMapping("/games/players/{gamePlayerId}/salvos")
+    @GetMapping("/games/players/{gamePlayerId}/salvoes")
     public Map<String,Object> getSalvos(@PathVariable Long gamePlayerId){
         return makeMap("salvos", gamePlayerRepository.getOne(gamePlayerId).getSalvoes().stream()
                 .map(salvo -> salvo.makeSalvoDTO()).collect(Collectors.toList()));
     }
 
-    @PostMapping("/games/players/{gamePlayerId}/salvos")
+    @PostMapping("/games/players/{gamePlayerId}/salvoes")
     public ResponseEntity<Map<String,Object>> sendSalvos(@PathVariable Long gamePlayerId,
                                                          Authentication authentication, @RequestBody Salvo salvos){
         Optional<GamePlayer> gamePlayerSend = gamePlayerRepository.findById(gamePlayerId);
@@ -303,18 +304,63 @@ public class SalvoController {
 
     public List<String> findShipLocations(GamePlayer gamePlayer, String type) {
         Optional<Ship> response;
-        response = gamePlayer.getShips().stream().filter(ship -> ship.getType() == type).findFirst();
+        response = gamePlayer.getShips().stream().filter(ship -> ship.getType().equals(type)).findFirst();
         if (response.isEmpty()) {
             return new ArrayList<String>();
         }
         return response.get().getLocations();
     }
 
+    //getifallsunk task 11
+    private Boolean getIfAllSunk (GamePlayer self, GamePlayer opponent) {
+
+        if(!opponent.getShips().isEmpty() && !self.getSalvoes().isEmpty()){
+            return opponent.getSalvoes().stream().flatMap(salvo -> salvo.getSalvoLocations().stream())
+                    .collect(Collectors.toList()).containsAll(self.getShips().stream()
+                    .flatMap(ship -> ship.getLocations().stream()).collect(Collectors.toList()));
+        }
+        return false;
+    }
+    //Game state, task 11
+    private GameState gameState(GamePlayer self) {
+        if (self.getShips().size() == 0) { //tiene barcos?
+            return GameState.PLACESHIPS;
+        }
+        if (self.getGame().getGamePlayers().size() == 1) { //falta oponente?
+            return GameState.WAITINGFOROPP;
+        }
+        //if (self.getGame().getGamePlayers().size() == 2) { //esta lleno?
+            if (self.getOpponent().getShips().isEmpty()) {
+                return GameState.WAIT;
+            }
+            if (self.getSalvoes().size() < self.getOpponent().getSalvoes().size()) {
+                return GameState.PLAY;
+            }
+            if (self.getSalvoes().size() > self.getOpponent().getSalvoes().size()) {
+                return GameState.WAIT;
+            }
+            if (self.getSalvoes().size() == self.getOpponent().getSalvoes().size()) { //probar si se puede chequear que haya salvos
+                boolean selfLost = getIfAllSunk(self, self.getOpponent());
+                boolean opponentLost = getIfAllSunk(self.getOpponent(), self);
+
+                if (selfLost && opponentLost) {
+                    scoreRepository.save(new Score(self.getPlayer(), self.getGame(), 0.5, LocalDateTime.now()));
+                    return GameState.TIE;
+                } else if (opponentLost) {
+                    scoreRepository.save(new Score(self.getPlayer(), self.getGame(), 1.0, LocalDateTime.now()));
+                    return GameState.WON;
+                } else if (selfLost) {
+                    scoreRepository.save(new Score(self.getPlayer(), self.getGame(), 0.0, LocalDateTime.now()));
+                    return GameState.LOST;
+                }
+
+            } return GameState.PLAY;
+        }
+
     //TASK 10
     private List<Map> hitsAndSinks(GamePlayer self, GamePlayer opponent) {
 
         List<Map> hits = new ArrayList<>();
-
 
         //TOTAL DAMAGE
         int carrierHits = 0;
@@ -381,12 +427,12 @@ public class SalvoController {
             //damage por turno
             damagePerTurn.put("carrierHits", carrierTurn);
             damagePerTurn.put("battleshipHits", battleshipTurn);
-            damagePerTurn.put("submarine", submarineTurn);
-            damagePerTurn.put("destroyer", destroyerTurn);
-            damagePerTurn.put("patrolboat", patrolboatTurn);
+            damagePerTurn.put("submarineHits", submarineTurn);
+            damagePerTurn.put("destroyerHits", destroyerTurn);
+            damagePerTurn.put("patrolboatHits", patrolboatTurn);
             //total damage
-            damagePerTurn.put("carrierHits", carrierHits);
-            damagePerTurn.put("battleshipHits", battleshipHits);
+            damagePerTurn.put("carrier", carrierHits);
+            damagePerTurn.put("battleship", battleshipHits);
             damagePerTurn.put("submarine", submarineHits);
             damagePerTurn.put("destroyer", destroyerHits);
             damagePerTurn.put("patrolboat", patrolboatHits);
@@ -394,7 +440,8 @@ public class SalvoController {
             hitsPerTurn.put("turn", salvo.getTurn());
             hitsPerTurn.put("missed", missed);
             hitsPerTurn.put("damages", damagePerTurn);
-            hitsPerTurn.put("hitLocation", hitCellList);
+            //cambiado de hitLocation
+            hitsPerTurn.put("hitLocations", hitCellList);
             //List
             hits.add(hitsPerTurn);
         }

@@ -36,8 +36,9 @@ public class GamePlayer {
     private Set<Ship> ships = new HashSet<>();
 
     //26-03 agregado
+    @OrderBy
     @OneToMany(mappedBy = "gamePlayers", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-    private List<Salvo> salvoes;
+    private Set<Salvo> salvoes;
 
     private LocalDateTime joinDate;
 /*    private Player player;
@@ -47,7 +48,7 @@ public class GamePlayer {
     public GamePlayer(){
         this.joinDate = LocalDateTime.now();
         this.ships = new HashSet<>();
-        this.salvoes = new ArrayList<>();
+        this.salvoes = new HashSet<>();
     }
 
     public GamePlayer(Player player, Game game){
@@ -55,7 +56,7 @@ public class GamePlayer {
         this.game = game;
         this.joinDate = LocalDateTime.now();
         this.ships = new HashSet<>();
-        this.salvoes = new ArrayList<>();
+        this.salvoes = new HashSet<>();
     }
 
     //Setters y getters//
@@ -121,13 +122,13 @@ public class GamePlayer {
     }*/
 
     //@JsonIgnore
-    public List<Salvo> getSalvoes() { return salvoes; }
+    public Set<Salvo> getSalvoes() { return salvoes; }
 
     /*public void setSalvoes(Salvo salvo) {
         this.salvoes = salvoes;
     }*/
 
-    public void setSalvoes(List<Salvo> salvoes) {
+    public void setSalvoes(Set<Salvo> salvoes) {
         this.salvoes = salvoes;
     }
 
@@ -165,9 +166,6 @@ public class GamePlayer {
         dto.put("salvoes", game.getGamePlayers().stream().flatMap(a -> a.getSalvoes().stream().map(b ->b.makeSalvoDTO())).collect(Collectors.toList()));
         return dto;
     }*/
-
-    //GAMEVIEW NUEVO
-
 
 
 }
