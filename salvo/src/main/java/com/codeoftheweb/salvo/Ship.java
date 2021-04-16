@@ -26,7 +26,7 @@ public class Ship {
     @JoinColumn(name="gamePlayerId")
     private GamePlayer gamePlayers;
 
-    //Constructores//
+    //Constructors//
     public Ship(){
         this.locations = locations;
     }
@@ -43,7 +43,7 @@ public class Ship {
         gamePlayer.setShips(this);
     }
 
-    //Getters y setters//
+    //Getters & setters//
 
     public long getId() {
         return id;
@@ -53,7 +53,6 @@ public class Ship {
         this.id = id;
     }
 
-    //gamePlayerS o gamePlayer???
     public GamePlayer getGamePlayers() {
         return gamePlayers;
     }
@@ -70,7 +69,7 @@ public class Ship {
         this.type = type;
     }
 
-    //locations da problemas, 25-03
+
     public List<String> getLocations() {
         return locations;
     }
@@ -85,7 +84,7 @@ public class Ship {
     }
     */
 
-    //makeShipDTO
+    //DTOs
     public Map<String, Object> makeShipDTO(){
         Map<String, Object> dto = new LinkedHashMap<String, Object>();
         dto.put("id", this.getId());

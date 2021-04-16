@@ -26,7 +26,7 @@ public class Score {
     private double score;
     private LocalDateTime finishDate;
 
-    //Constructores//
+    //Constructors//
     public Score(){
 
     }
@@ -38,7 +38,7 @@ public class Score {
         this.finishDate = finishDate;
     }
 
-    //Getters y Setters//
+    //Getters & Setters//
 
     public long getId() {
         return id;
@@ -82,9 +82,7 @@ public class Score {
         this.finishDate = finishDate;
     }
 
-    //DTOs?
-    //Esto usa gameID, playerID, score, finishDate, e ID lol
-
+    //DTOs
     public Map<String, Object> makeScoreDTO(){
         Map<String, Object> dto = new LinkedHashMap<String, Object>();
         dto.put("score", this.getScore());

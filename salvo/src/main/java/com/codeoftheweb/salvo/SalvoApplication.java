@@ -40,14 +40,14 @@ public class SalvoApplication extends SpringBootServletInitializer {
 		SpringApplication.run(SalvoApplication.class, args);
 	}
 
+	//Spring sees bean methods and calls them at them moment of booting
+	//it will also save the instance for automatic inyection of code
 
-	//Spring ve los métodos bean y los llama en el momento del inicio,
-	//guardará la instancia para la inyección automática
 	@Bean
 	public CommandLineRunner initdata(PlayerRepository playerRepository, GameRepository gameRepository,
 									  GamePlayerRepository gamePlayerRepository, ShipRepository shipRepository,
 									  SalvoRepository salvoRepository, ScoreRepository scoreRepository) {
-		return (args) -> { //Acá es donde deposito nuevos usuarios con su mail
+		return (args) -> {
 
 			// PLAYER //
 			Player player1 = playerRepository.save(new Player("j.bauer@ctu.gov", passwordEncoder().encode("24")));
@@ -76,28 +76,28 @@ public class SalvoApplication extends SpringBootServletInitializer {
 			gameRepository.save(game8);
 
 			// GAMEPLAYER //
-				//Game 1
+			//Game 1
 			GamePlayer gamePlayer1 = new GamePlayer(player1, game1);
 			GamePlayer gamePlayer2 = new GamePlayer(player2, game1);
-				//Game 2
+			//Game 2
 			GamePlayer gamePlayer3 = new GamePlayer(player1, game2);
 			GamePlayer gamePlayer4 = new GamePlayer(player2, game2);
-				//Game 3
+			//Game 3
 			GamePlayer gamePlayer5 = new GamePlayer(player2, game3);
 			GamePlayer gamePlayer6 = new GamePlayer(player3, game3);
-				//Game 4
+			//Game 4
 			GamePlayer gamePlayer7 = new GamePlayer(player2, game4);
 			GamePlayer gamePlayer8 = new GamePlayer(player1, game4);
-				//Game 5
+			//Game 5
 			GamePlayer gamePlayer9 = new GamePlayer(player3, game5);
 			GamePlayer gamePlayer10 = new GamePlayer(player1, game5);
-				//Game 6
+			//Game 6
 			GamePlayer gamePlayer11 = new GamePlayer(player4, game6);
 			GamePlayer gamePlayer12 = new GamePlayer(player0, game6); //NA
-				//Game 7
+			//Game 7
 			GamePlayer gamePlayer13 = new GamePlayer(player3, game7);
 			GamePlayer gamePlayer14 = new GamePlayer(player0, game7); //NA
-				//Game 8
+			//Game 8
 			GamePlayer gamePlayer15 = new GamePlayer(player3, game8);
 			GamePlayer gamePlayer16 = new GamePlayer(player1, game8);
 
@@ -118,77 +118,77 @@ public class SalvoApplication extends SpringBootServletInitializer {
 			gamePlayerRepository.save(gamePlayer15);
 			gamePlayerRepository.save(gamePlayer16);
 
-			//SHIPS y SHIPLOCATIONS//
+			//SHIPS & SHIPLOCATIONS//
 
-				//GAME 1, PLAYER A
+			//GAME 1, PLAYER A
 			ArrayList<String> shipPosition1 = new ArrayList<>(Arrays.asList("H2", "H3", "H4"));
 			Ship ship1 = shipRepository.save(new Ship("Destroyer", gamePlayer1, shipPosition1));
 			ArrayList<String> shipPosition2 = new ArrayList<>(Arrays.asList("E1", "F1", "G1"));
 			Ship ship2 = shipRepository.save(new Ship("Submarine", gamePlayer1, shipPosition2));
 			ArrayList<String> shipPosition3 = new ArrayList<>(Arrays.asList("B4", "B5"));
 			Ship ship3 = shipRepository.save(new Ship("Patrol Boat", gamePlayer1, shipPosition3));
-				//GAME 1, PLAYER B
+			//GAME 1, PLAYER B
 			ArrayList<String> shipPosition4 = new ArrayList<>(Arrays.asList("B5", "C5", "D5"));
 			Ship ship4 = shipRepository.save(new Ship("Destroyer", gamePlayer2, shipPosition4));
 			ArrayList<String> shipPosition5 = new ArrayList<>(Arrays.asList("F1", "F2"));
 			Ship ship5 = shipRepository.save(new Ship("Patrol Boat", gamePlayer2, shipPosition5));
 
-				//GAME 2, PLAYER A
+			//GAME 2, PLAYER A
 			ArrayList<String> shipPosition6 = new ArrayList<>(Arrays.asList("B5", "C5", "D5"));
 			Ship ship6 = shipRepository.save(new Ship("Destroyer", gamePlayer3, shipPosition6));
 			ArrayList<String> shipPosition7 = new ArrayList<>(Arrays.asList("C6", "C7"));
 			Ship ship7 = shipRepository.save(new Ship("Patrol Boat", gamePlayer3, shipPosition7));
-				//GAME 2, PLAYER B
+			//GAME 2, PLAYER B
 			ArrayList<String> shipPosition8 = new ArrayList<>(Arrays.asList("A2", "A3", "A4"));
 			Ship ship8 = shipRepository.save(new Ship("Submarine", gamePlayer4, shipPosition8));
 			ArrayList<String> shipPosition9 = new ArrayList<>(Arrays.asList("G6", "H6"));
 			Ship ship9 = shipRepository.save(new Ship("Patrol Boat", gamePlayer4, shipPosition9));
 
-				//GAME 3, PLAYER A
+			//GAME 3, PLAYER A
 			ArrayList<String> shipPosition10 = new ArrayList<>(Arrays.asList("B5", "C5", "D5"));
 			Ship ship10 = shipRepository.save(new Ship("Destroyer", gamePlayer5, shipPosition10));
 			ArrayList<String> shipPosition11 = new ArrayList<>(Arrays.asList("B5", "C5", "D5"));
 			Ship ship11 = shipRepository.save(new Ship("Patrol Boat", gamePlayer5, shipPosition11));
-				//GAME 3, PLAYER B
+			//GAME 3, PLAYER B
 			ArrayList<String> shipPosition12 = new ArrayList<>(Arrays.asList("A2", "A3", "A4"));
 			Ship ship12 = shipRepository.save(new Ship("Submarine", gamePlayer6, shipPosition12));
 			ArrayList<String> shipPosition13 = new ArrayList<>(Arrays.asList("G6", "H6"));
 			Ship ship13 = shipRepository.save(new Ship("Patrol Boat", gamePlayer6, shipPosition13));
 
-				//GAME 4, PLAYER A
+			//GAME 4, PLAYER A
 			ArrayList<String> shipPosition14 = new ArrayList<>(Arrays.asList("B5", "C5", "D5"));
 			Ship ship14 = shipRepository.save(new Ship("Destroyer", gamePlayer7, shipPosition14));
 			ArrayList<String> shipPosition15 = new ArrayList<>(Arrays.asList("C6", "C7"));
 			Ship ship15 = shipRepository.save(new Ship("Patrol Boat", gamePlayer7, shipPosition15));
-				//GAME 4, PLAYER B
+			//GAME 4, PLAYER B
 			ArrayList<String> shipPosition16 = new ArrayList<>(Arrays.asList("A2", "A3", "A4"));
 			Ship ship16 = shipRepository.save(new Ship("Submarine", gamePlayer8, shipPosition16));
 			ArrayList<String> shipPosition17 = new ArrayList<>(Arrays.asList("G6", "H6"));
 			Ship ship17 = shipRepository.save(new Ship("Patrol Boat", gamePlayer8, shipPosition17));
 
-				//GAME 5, PLAYER A
+			//GAME 5, PLAYER A
 			ArrayList<String> shipPosition18 = new ArrayList<>(Arrays.asList("B5", "C5", "D5"));
 			Ship ship18 = shipRepository.save(new Ship("Destroyer", gamePlayer9, shipPosition18));
 			ArrayList<String> shipPosition19 = new ArrayList<>(Arrays.asList("C6", "C7"));
 			Ship ship19 = shipRepository.save(new Ship("Patrol Boat", gamePlayer9, shipPosition19));
-				//GAME 5, PLAYER B
+			//GAME 5, PLAYER B
 			ArrayList<String> shipPosition20 = new ArrayList<>(Arrays.asList("A2", "A3", "A4"));
 			Ship ship20 = shipRepository.save(new Ship("Submarine", gamePlayer10, shipPosition20));
 			ArrayList<String> shipPosition21 = new ArrayList<>(Arrays.asList("G6", "H6"));
 			Ship ship21 = shipRepository.save(new Ship("Patrol Boat", gamePlayer10, shipPosition21));
 
-				//GAME 6, PLAYER A
+			//GAME 6, PLAYER A
 			ArrayList<String> shipPosition22 = new ArrayList<>(Arrays.asList("B5", "C5", "D5"));
 			Ship ship22 = shipRepository.save(new Ship("Destroyer", gamePlayer11, shipPosition22));
 			ArrayList<String> shipPosition23 = new ArrayList<>(Arrays.asList("C6", "C7"));
 			Ship ship23 = shipRepository.save(new Ship("Patrol Boat", gamePlayer11, shipPosition23));
 
-				//GAME 8, PLAYER A
+			//GAME 8, PLAYER A
 			ArrayList<String> shipPosition24 = new ArrayList<>(Arrays.asList("B5", "C5", "D5"));
 			Ship ship24 = shipRepository.save(new Ship("Submarine", gamePlayer15, shipPosition24));
 			ArrayList<String> shipPosition25 = new ArrayList<>(Arrays.asList("C6", "C7"));
 			Ship ship25 = shipRepository.save(new Ship("Patrol Boat", gamePlayer15, shipPosition25));
-				//GAME 8, PLAYER B
+			//GAME 8, PLAYER B
 			ArrayList<String> shipPosition26 = new ArrayList<>(Arrays.asList("A2", "A3", "A4"));
 			Ship ship26 = shipRepository.save(new Ship("Submarine", gamePlayer16, shipPosition26));
 			ArrayList<String> shipPosition27 = new ArrayList<>(Arrays.asList("G6", "H6"));

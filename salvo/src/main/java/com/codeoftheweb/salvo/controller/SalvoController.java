@@ -41,42 +41,6 @@ public class SalvoController {
     @Autowired
     PasswordEncoder passwordEncoder;
 
-    /*public Map<String, Object> game_view() {
-        Map<String, Object> dto = new LinkedHashMap<>();
-
-        dto.put("id", game.getId());
-        dto.put("created", game.getCreationDate());
-        dto.put("gamePlayers", game.getGamePlayers().stream().map(gamePlayer -> makeGamePlayerDTO()).collect(Collectors.toList()));
-        dto.put("ships", ships.stream().map(Ship -> Ship.makeShipDTO()).collect(Collectors.toList()));
-        dto.put("salvoes", game.getGamePlayers().stream().flatMap(a -> a.getSalvoes().stream().map(b ->b.makeSalvoDTO())).collect(Collectors.toList()));
-
-        Map<String, Object> hits = new LinkedHashMap<>();
-        hits.put("self", new ArrayList<>());
-        hits.put("opponent", new ArrayList<>());
-        dto.put("gameState", "PLACESHIPS");
-        hits.put("self", hitsAndSinks(gamePlayer().get()));
-        hits.put("opponent", hitsAndSinks(gamePlayer.get().getOpponent()));
-
-        dto.put("gamePlayers", this.getGame().getGamePlayers()
-                .stream()
-                .map(gamePlayer1 -> gamePlayer1.makeGamePlayerDTO())
-                .collect(Collectors.toList()));
-        dto.put("ships",  this.getShips()
-                .stream()
-                .map(ship -> ship.makeShipDTO())
-                .collect(Collectors.toList()));
-        dto.put("salvoes",  this.getGame().getGamePlayers()
-                .stream()
-                .flatMap(gamePlayer1 -> gamePlayer1.getSalvoes()
-                        .stream()
-                        .map(salvo -> salvo.makeSalvoDTO()))
-                .collect(Collectors.toList()));
-        dto.put("hits", hits);
-
-        return dto;
-    }*/
-
-
     @RequestMapping("/game_view/{nn}")
     public ResponseEntity<Map<String, Object>> getGameViewByGamePlayerID(@PathVariable Long nn, Authentication  authentication) {
 
@@ -179,17 +143,17 @@ public class SalvoController {
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
-    //Crear nuevo juego, frontend
+    //Create new game on front end
     @PostMapping("/games")
     public ResponseEntity<Object> createGame(Authentication authentication){
         Map<String , Object> map = new HashMap<>();
         ResponseEntity response;
-        if (!isGuest(authentication)){ //osea si existe el player
+        if (!isGuest(authentication)){ //Does player exist?
             Player playerX = playerRepository.findByUserName(authentication.getName());
             Game gameX = gameRepository.save(new Game(LocalDateTime.now()));
 
             GamePlayer gp = gamePlayerRepository.save(new GamePlayer(playerRepository.save(playerX), gameX));
-            //guardo playerX para cuando se implemente en nube
+            //playerX is used for cloud-based hosting
 
             response = new ResponseEntity<>(makeMap("gpid", gp.getId()), HttpStatus.CREATED);
 
@@ -199,7 +163,8 @@ public class SalvoController {
         return response;
     }
 
-    @RequestMapping(path = "/game/{gameId}/players", method = RequestMethod.POST) // @PathVariable obtiene el valor especifico de una url como gp
+    // @PathVariable obtiene el valor especifico de una url como gp
+    @RequestMapping(path = "/game/{gameId}/players", method = RequestMethod.POST)
     public ResponseEntity <Map <String,Object>> joinGame(@PathVariable long gameId, Authentication authentication){
         ResponseEntity<Map<String, Object>> response;
 
@@ -225,7 +190,6 @@ public class SalvoController {
         return map;
     }
 
-    //task 8
     @GetMapping("/games/players/{gamePlayerId}/ships")
     public Map<String,Object> getShip(@PathVariable Long gamePlayerId){
         return makeMap("ships", gamePlayerRepository.getOne(gamePlayerId).getShips().stream()
@@ -259,7 +223,6 @@ public class SalvoController {
         return response;
     }
 
-    //task 9
     @GetMapping("/games/players/{gamePlayerId}/salvoes")
     public Map<String,Object> getSalvos(@PathVariable Long gamePlayerId){
         return makeMap("salvos", gamePlayerRepository.getOne(gamePlayerId).getSalvoes().stream()
@@ -280,7 +243,7 @@ public class SalvoController {
         }else if (gamePlayerSend.get().getPlayer().getId()!= currentPlayer.getId()){
             response = new ResponseEntity<>(makeMap("error","El jugador no está autorizado"),HttpStatus.UNAUTHORIZED);
         }else {
-            //encuentro gameplayer de enemigo
+            //Find enemy's gameplayer
             Optional<GamePlayer> gamePlayerEnemy = gamePlayerSend.get().getGame().getGamePlayers()
                     .stream().filter(gp -> gp.getId() != gamePlayerSend.get().getId()).findFirst();
             if(gamePlayerEnemy.isPresent()){
@@ -297,8 +260,8 @@ public class SalvoController {
             } else{
                 response = new ResponseEntity<>(makeMap("error","Falta un enemigo"),HttpStatus.FORBIDDEN);
             }
-
-        }//agarrar gameplayer ajeno y filtrar todo lo demas, y comparar localizaciones
+        }
+        //Fetch the other player´s gameplayer and filter everything to compare locations
         return response;
     }
 
@@ -311,7 +274,6 @@ public class SalvoController {
         return response.get().getLocations();
     }
 
-    //getifallsunk task 11
     private Boolean getIfAllSunk (GamePlayer self, GamePlayer opponent) {
 
         if(!opponent.getShips().isEmpty() && !self.getSalvoes().isEmpty()){
@@ -321,15 +283,14 @@ public class SalvoController {
         }
         return false;
     }
-    //Game state, task 11
+    //Game state
     private GameState gameState(GamePlayer self) {
-        if (self.getShips().size() == 0) { //tiene barcos?
+        if (self.getShips().size() == 0) { //are there any ships?
             return GameState.PLACESHIPS;
         }
-        if (self.getGame().getGamePlayers().size() == 1) { //falta oponente?
+        if (self.getGame().getGamePlayers().size() == 1) { //is there any opponent?
             return GameState.WAITINGFOROPP;
         }
-        //if (self.getGame().getGamePlayers().size() == 2) { //esta lleno?
             if (self.getOpponent().getShips().isEmpty()) {
                 return GameState.WAIT;
             }
@@ -339,7 +300,8 @@ public class SalvoController {
             if (self.getSalvoes().size() > self.getOpponent().getSalvoes().size()) {
                 return GameState.WAIT;
             }
-            if (self.getSalvoes().size() == self.getOpponent().getSalvoes().size()) { //probar si se puede chequear que haya salvos
+            if (self.getSalvoes().size() == self.getOpponent().getSalvoes().size()) {
+                //test if there's any salvoes
                 boolean selfLost = getIfAllSunk(self, self.getOpponent());
                 boolean opponentLost = getIfAllSunk(self.getOpponent(), self);
 
@@ -357,7 +319,6 @@ public class SalvoController {
             } return GameState.PLAY;
         }
 
-    //TASK 10
     private List<Map> hitsAndSinks(GamePlayer self, GamePlayer opponent) {
 
         List<Map> hits = new ArrayList<>();
@@ -424,25 +385,24 @@ public class SalvoController {
                     hitCellList.add(location);
                 }
             }
-            //damage por turno
+            //damage per turn
             damagePerTurn.put("carrierHits", carrierTurn);
             damagePerTurn.put("battleshipHits", battleshipTurn);
             damagePerTurn.put("submarineHits", submarineTurn);
             damagePerTurn.put("destroyerHits", destroyerTurn);
             damagePerTurn.put("patrolboatHits", patrolboatTurn);
-            //total damage
+            //add to total damage
             damagePerTurn.put("carrier", carrierHits);
             damagePerTurn.put("battleship", battleshipHits);
             damagePerTurn.put("submarine", submarineHits);
             damagePerTurn.put("destroyer", destroyerHits);
             damagePerTurn.put("patrolboat", patrolboatHits);
-            //
+
             hitsPerTurn.put("turn", salvo.getTurn());
             hitsPerTurn.put("missed", missed);
             hitsPerTurn.put("damages", damagePerTurn);
-            //cambiado de hitLocation
             hitsPerTurn.put("hitLocations", hitCellList);
-            //List
+            //add to List
             hits.add(hitsPerTurn);
         }
         return hits;

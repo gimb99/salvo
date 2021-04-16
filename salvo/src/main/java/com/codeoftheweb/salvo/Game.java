@@ -13,11 +13,7 @@ import java.util.Set;
 import java.util.HashSet;
 import java.util.stream.Collectors;
 
-import static java.util.stream.Collectors.toList;
-
-
-//A diferencia de Player, tenes que poner creationDate, el id se mantiene
-//Esta clase aplica ONE-TO-MANY
+//This class uses ONE-TO-MANY
 
 @Entity
 public class Game {
@@ -34,7 +30,7 @@ public class Game {
 
     private LocalDateTime creationDate; //current date
 
-    //Constructores//
+    //Constructors//
     public Game() {
     }
 
@@ -44,10 +40,9 @@ public class Game {
 
     public void addGamePlayer(GamePlayer gamePlayer) {
         gamePlayer.setGame(this);
-        //gamePlayer.add(gamePlayer);
     }
 
-    //Getters y setters
+    //Getters & setters
     public long getId() {
         return id;
     }
@@ -69,7 +64,7 @@ public class Game {
         this.players = players;
     }
 
-            // DTOs
+    // DTOs
     public Map<String, Object> makeGameDTO() {
         Map<String, Object> dto = new LinkedHashMap<String, Object>();
         dto.put("id", this.getId());

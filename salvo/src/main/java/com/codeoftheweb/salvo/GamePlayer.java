@@ -20,9 +20,9 @@ public class GamePlayer {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "native")
     @GenericGenerator(name = "native", strategy = "native")
-    private long id; //importante para poder usar el manytomany
+    private long id;
 
-    //Conecciones manyToOne
+    //manyToOne connections
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name="player_id")
     private Player player;
@@ -31,20 +31,16 @@ public class GamePlayer {
     @JoinColumn(name="game_id")
     private Game game;
 
-    //Me falta el OnetoMany de ship (le puse ships, no recuerdo si esta bien)
     @OneToMany(mappedBy = "gamePlayers", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     private Set<Ship> ships = new HashSet<>();
 
-    //26-03 agregado
     @OrderBy
     @OneToMany(mappedBy = "gamePlayers", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     private Set<Salvo> salvoes;
 
     private LocalDateTime joinDate;
-/*    private Player player;
-    private Game game;*/
 
-    //Constructores//
+    //Constructors//
     public GamePlayer(){
         this.joinDate = LocalDateTime.now();
         this.ships = new HashSet<>();
@@ -59,7 +55,7 @@ public class GamePlayer {
         this.salvoes = new HashSet<>();
     }
 
-    //Setters y getters//
+    //Setters & getters//
     public long getId(){
         return id;
     }
@@ -108,25 +104,28 @@ public class GamePlayer {
         this.salvoes.add(salvo);
     }
 
-    /*public boolean hasSalvo(Salvo salvo) {
+    /*
+    public boolean hasSalvo(Salvo salvo) {
         for (Salvo salvo1 : salvoes) {
             if (salvo1.getTurn() == salvo.getTurn()) {
                 return true;
             }
         }
         return false;
-    }*/
+    }
 
-  /*  public boolean placedShips(){
+    public void setSalvoes(Salvo salvo) {
+        this.salvoes = salvoes;
+    }
+
+    public boolean placedShips(){
         return ships.size() = game.maxShipsAllowed;
     }*/
 
     //@JsonIgnore
     public Set<Salvo> getSalvoes() { return salvoes; }
 
-    /*public void setSalvoes(Salvo salvo) {
-        this.salvoes = salvoes;
-    }*/
+
 
     public void setSalvoes(Set<Salvo> salvoes) {
         this.salvoes = salvoes;
@@ -141,31 +140,15 @@ public class GamePlayer {
         Map<String, Object> dto = new LinkedHashMap<String, Object>();
         dto.put("id", this.id);
         dto.put("player", player.makePlayerDTO());
-       /* if(getScore()!=null){
-            dto.put("scores", getScore().getScore());
-            //dto.put("scores", this.getScore().getScore());
-            //evita recursividad
-        }*/
+
         return dto;
     }
 
-    //Encontrar enemigo
+    //Find enemy
     public GamePlayer getOpponent(){
         return this.getGame().getGamePlayers().stream()
                 .filter(gamePlayer -> gamePlayer.getId()!= this.getId())
                 .findFirst().orElse(new GamePlayer());
     }
-
-    // == gameViewDTO OLD
-/*    public Map<String, Object> game_view() {
-        Map<String, Object> dto = new LinkedHashMap<>();
-        dto.put("id", game.getId());
-        dto.put("created", game.getCreationDate());
-        dto.put("gamePlayers", game.getGamePlayers().stream().map(gamePlayer -> makeGamePlayerDTO()).collect(Collectors.toList()));
-        dto.put("ships", ships.stream().map(Ship -> Ship.makeShipDTO()).collect(Collectors.toList()));
-        dto.put("salvoes", game.getGamePlayers().stream().flatMap(a -> a.getSalvoes().stream().map(b ->b.makeSalvoDTO())).collect(Collectors.toList()));
-        return dto;
-    }*/
-
 
 }
